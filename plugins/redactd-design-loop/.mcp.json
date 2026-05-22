@@ -1,12 +1,11 @@
 {
-  "mcpServers": {
+  "mcp_servers": {
     "redactd-design-loop": {
       "command": "node",
       "cwd": ".",
       "args": [
         "./src/index.js"
-      ],
-      "env": []
+      ]
     }
   }
 }
