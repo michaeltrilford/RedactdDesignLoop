@@ -4,29 +4,40 @@ The official Redactd Design Loop plugin for Codex.
 
 Run Redactd Design Loop on Redactd JSON artifacts from Codex, generate critique and iteration outputs, and import the results back into Redactd.
 
-## How Users Find It
+## Codex Plugin Setup
 
-Redactd Design Loop is distributed as a public GitHub-backed Codex marketplace.
+Redactd Design Loop is the official Codex plugin for running critique and iteration against Redactd JSON artifacts.
 
-This is the public install path because Codex plugins are discovered from marketplace metadata. This repo includes that metadata in `.agents/plugins/marketplace.json`, which tells Codex where the Redactd Design Loop plugin lives inside the repo.
+Until Codex has a simpler public plugin directory, install Redactd Design Loop by pointing Codex at the Redactd Design Loop GitHub repo.
 
-Codex does not currently provide a self-serve public plugin directory listing for third-party plugins. Until that exists, users install third-party plugins by adding a GitHub marketplace source in Codex. After the marketplace is added, Codex reads the marketplace file, shows the plugin in the Plugins UI, and lets the user add it to Codex.
+Plugin source:
+https://github.com/michaeltrilford/redactd-design-loop
 
-Workspace share links are separate. They are useful for sharing plugins inside a ChatGPT Business or Enterprise workspace, but they are not the public install path for Redactd users outside that workspace.
+![Codex Add Marketplace dialog](https://redactd.xyz/images/install-plugin.png)
 
-## Install In Codex
+## Manual Install Steps
 
-In Codex, open **Plugins**, then add this GitHub marketplace:
+1. Open Codex.
+2. Go to **Plugins**.
+3. Open **Built by OpenAI**.
+4. Choose **+ Add more**.
+5. Paste the values below.
+6. Save the marketplace.
+7. Find **Redactd Design Loop** in the plugin list.
+8. Install or enable it.
+
+## Add Marketplace Values
 
 ```text
 Source: michaeltrilford/redactd-design-loop
-Git ref: main
+
+Git ref:
+main
+
 Sparse paths:
 .agents/plugins
 plugins/redactd-design-loop
 ```
-
-After the marketplace is added, install **Redactd Design Loop** from the plugin list.
 
 ## Usage
 
