@@ -1,0 +1,43 @@
+{
+  "name": "redactd-design-loop",
+  "version": "0.1.0",
+  "description": "Official Codex plugin for running Redactd Design Loop on Redactd JSON artifacts.",
+  "author": {
+    "name": "Redactd",
+    "url": "https://redactd.xyz"
+  },
+  "homepage": "https://redactd.xyz/design-loop",
+  "license": "LicenseRef-Redactd-Proprietary",
+  "keywords": [
+    "redactd",
+    "codex",
+    "design-loop",
+    "critique",
+    "iteration"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Redactd Design Loop",
+    "shortDescription": "Critique and iterate Redactd JSON artifacts inside Codex.",
+    "longDescription": "Run Redactd Design Loop against attached Redactd JSON artifacts. The plugin prepares a local run, loads packaged user and stakeholder personas, asks Codex to review the artifact, writes structured critique and iteration outputs, and can save the strongest Redactd JSON result for import.",
+    "developerName": "Redactd",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://redactd.xyz/design-loop",
+    "defaultPrompt": [
+      "Run Loop on this Redactd JSON.",
+      "Critique this artifact with users and stakeholders.",
+      "Create safer and bolder iterations of this UI."
+    ],
+    "brandColor": "#111827",
+    "composerIcon": "./assets/composer-icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": [
+      "./assets/product.png"
+    ]
+  }
+}
