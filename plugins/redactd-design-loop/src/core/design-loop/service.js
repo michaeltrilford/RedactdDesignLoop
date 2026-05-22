@@ -1,5 +1,4 @@
 import path from 'node:path';
-import os from 'node:os';
 import { access } from 'node:fs/promises';
 import { evaluatePersona } from './evaluator.js';
 import { ensureDir, listFilesRecursive, readJson, writeJson, writeText } from './fs-utils.js';
@@ -55,7 +54,7 @@ function resolveLoopCount(input) {
     return input.explorationDepth;
   }
 
-  return 8;
+  return 4;
 }
 
 function resolveExplorationLabel(loopCount) {
@@ -98,12 +97,19 @@ function resolveOutputRoot(input) {
     return path.resolve(input.outputRoot);
   }
 
-  return path.join(
-    os.homedir(),
-    'Documents',
-    'Redactd-Design-Loop',
-    resolveDefaultProjectName(input)
-  );
+  if (input.projectPath) {
+    return path.join(path.resolve(input.projectPath), 'Redactd-Design-Loop', resolveDefaultProjectName(input));
+  }
+
+  if (input.artifactPath) {
+    return path.join(
+      path.dirname(path.resolve(input.artifactPath)),
+      'Redactd-Design-Loop',
+      resolveDefaultProjectName(input)
+    );
+  }
+
+  return path.join(process.cwd(), 'Redactd-Design-Loop', resolveDefaultProjectName(input));
 }
 
 function nowIso() {
@@ -348,6 +354,39 @@ function enforceDistinctReports(reports, personasById) {
   return reports;
 }
 
+function normalizeReportList(reports, personasById) {
+  return (Array.isArray(reports) ? reports : []).map((report, index) => {
+    const personaInput =
+      report?.persona && typeof report.persona === 'object'
+        ? report.persona
+        : {};
+    const personaId =
+      personaInput.id ||
+      report?.personaId ||
+      report?.persona_id ||
+      report?.id ||
+      `persona-${index + 1}`;
+    const persona = personasById.get(personaId) || personaInput;
+
+    return {
+      ...report,
+      persona: {
+        id: personaId,
+        name: personaInput.name || persona.name || personaId,
+        type: personaInput.type || persona.type || null,
+        role: personaInput.role || persona.role || null
+      },
+      frictionPoints: Array.isArray(report?.frictionPoints) ? report.frictionPoints : [],
+      confusionPoints: Array.isArray(report?.confusionPoints) ? report.confusionPoints : [],
+      recommendations: Array.isArray(report?.recommendations) ? report.recommendations : [],
+      csat: Number(report?.csat || 0),
+      taskSuccess: Boolean(report?.taskSuccess),
+      frictionScore: Number(report?.frictionScore || 0),
+      clarityScore: Number(report?.clarityScore || 0)
+    };
+  });
+}
+
 function validateCritiqueReports(reports) {
   if (!Array.isArray(reports) || reports.length === 0) {
     throw new Error('write_loop_artifacts requires non-empty critique reports.');
@@ -398,16 +437,17 @@ function validateCritiqueSummary(summary) {
   for (const key of requiredLists) {
     const values = normalizeTextList(summary[key]);
     if (values.length === 0) {
-      throw new Error(`Critique summary is missing ${key}.`);
+      summary[key] = [];
     }
   }
 
   const layeredLists = ['consensusFindings', 'userOnlyFindings', 'stakeholderOnlyFindings', 'outlierFindings'];
   const layeredCount = layeredLists.filter((key) => normalizeTextList(summary[key]).length > 0).length;
   if (layeredCount === 0) {
-    throw new Error(
-      'Critique summary must include at least one of consensusFindings, userOnlyFindings, stakeholderOnlyFindings, or outlierFindings.'
-    );
+    summary.consensusFindings = [
+      ...(summary.strongestFrictionFindings || []),
+      ...(summary.strongestConfusionFindings || [])
+    ].slice(0, 4);
   }
 }
 
@@ -857,11 +897,17 @@ export async function writeLoopArtifacts(input) {
   });
 
   const critique = input.critique || {};
-  validateCritiqueReports(critique.reports || []);
-  const scores = summarizeScoresFromArtifacts(critique);
+  const personas = await getPersonas(context.personaPath);
+  const personasById = new Map(personas.map((persona) => [persona.id, persona]));
+  const normalizedReports = enforceDistinctReports(
+    normalizeReportList(critique.reports || [], personasById),
+    personasById
+  );
+  validateCritiqueReports(normalizedReports);
+  const scores = summarizeScoresFromArtifacts({ ...critique, reports: normalizedReports });
 
   const reportPaths = [];
-  for (const report of critique.reports || []) {
+  for (const report of normalizedReports) {
     const reportId = report.persona?.id || `persona-${reportPaths.length + 1}`;
     const reportPath = path.join(jsonDir, `${reportId}.json`);
     await writeJson(reportPath, report);

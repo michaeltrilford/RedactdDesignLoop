@@ -22,7 +22,7 @@ function formatRunDesignLoop(result) {
           'No direction provided',
           '',
           '`run_design_loop_all`',
-          '`explorationDepth: 8`',
+          '`explorationDepth: 4`',
           '`variationMode: safe`',
           '',
           '[Learn more about Loop prompts](https://redactd.xyz/design-loop)',

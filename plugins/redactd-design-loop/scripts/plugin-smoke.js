@@ -161,8 +161,8 @@ async function main() {
     if (!text.includes('Review path: all')) {
       throw new Error('Expected default review path to be all.');
     }
-    if (!text.includes('Depth: 8')) {
-      throw new Error('Expected default exploration depth to be 8.');
+    if (!text.includes('Depth: 4')) {
+      throw new Error('Expected default exploration depth to be 4.');
     }
     if (!text.includes('Mode: Safe')) {
       throw new Error('Expected default variation mode to be Safe.');

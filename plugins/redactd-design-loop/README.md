@@ -51,11 +51,13 @@ Create safer and bolder iterations of this UI.
 
 ## Run Outputs
 
-Loop writes local run artifacts to the user's visible Documents folder by default:
+Loop writes local run artifacts into the selected Codex workspace by default when one is provided as `outputRoot`.
+For file-based runs without an explicit `outputRoot`, it writes beside the source artifact or project:
 
 ```text
-~/Documents/Redactd-Design-Loop/<project>/
-C:\Users\<you>\Documents\Redactd-Design-Loop\<project>\
+<selected-workspace>/design-loop-run/
+<artifact-folder>/Redactd-Design-Loop/<project>/design-loop-run/
+<project-folder>/Redactd-Design-Loop/<project>/design-loop-run/
 ```
 
 Pass `outputRoot` to choose a different destination.

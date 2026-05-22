@@ -20,10 +20,10 @@ Use this skill when the user says `loop`, `Loop`, or asks to run Redactd Design 
 ## Defaults
 
 - Review path: `all`
-- Exploration depth: `8`
+- Exploration depth: `4` by default. Use `8` only when the user explicitly asks for exhaustive/crazy-eights exploration.
 - Variation mode: `safe`
-- Selected folder: if the user names, selects, or provides a destination folder, pass that exact folder as `outputRoot`
-- Output: `~/Documents/Redactd-Design-Loop/<project>/` on macOS/Linux or `C:\Users\<you>\Documents\Redactd-Design-Loop\<project>\` on Windows, unless `outputRoot` is provided
+- Selected folder: if Codex is working in a selected project/workspace folder, pass that exact folder as `outputRoot` unless the user asks for another destination.
+- Output: use the selected workspace folder by default. If no workspace is known, the plugin infers from `projectPath` or `artifactPath` and writes `Redactd-Design-Loop/<project>/` beside that source.
 - Docs: `https://redactd.xyz/design-loop`
 
 ## Rules
@@ -34,6 +34,8 @@ Use this skill when the user says `loop`, `Loop`, or asks to run Redactd Design 
 - Do not inject critique notes into the design JSON.
 - Iterate only with component types present in the source artifact unless the source system clearly supports more.
 - Make iteration loops meaningfully different.
+- Keep reports compact: 1-2 friction points, 1 confusion point, and 1-2 recommendations per persona.
+- Keep iteration metadata compact: a short summary plus the minimum useful changes/retained/risks lists.
 - Use the full persona shape from context: context, traits, goals, behavior, focus, avoids, and successCriteria.
 - Every persona report must include at least one persona-specific concern and one persona-specific recommendation.
 - Do not submit duplicated persona reports with different names.

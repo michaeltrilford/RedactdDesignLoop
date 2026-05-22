@@ -23,7 +23,7 @@ function buildRunInputSchema() {
     explorationDepth: {
       type: 'number',
       enum: [2, 4, 6, 8],
-      description: '2 = focused refinement, 4 = broader exploration, 6 = strong variation sweep, 8 = crazy eights mode.'
+      description: '2 = focused refinement, 4 = broader exploration and default, 6 = strong variation sweep, 8 = crazy eights mode.'
     },
     variationMode: {
       type: 'string',
