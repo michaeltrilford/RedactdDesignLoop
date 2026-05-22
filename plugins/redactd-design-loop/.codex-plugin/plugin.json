@@ -34,9 +34,10 @@
       "Create safer and bolder iterations of this UI."
     ],
     "brandColor": "#111827",
-    "composerIcon": "./assets/composer-icon.png",
+    "composerIcon": "./assets/logo.png",
     "logo": "./assets/logo.png",
     "screenshots": [
+      "./assets/banner.png",
       "./assets/product.png"
     ]
   }
