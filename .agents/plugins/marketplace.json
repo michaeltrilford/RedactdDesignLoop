@@ -1,7 +1,7 @@
 {
-  "name": "redactd-official",
+  "name": "redactd-design-loop",
   "interface": {
-    "displayName": "Redactd Official"
+    "displayName": "Redactd Design Loop"
   },
   "plugins": [
     {
