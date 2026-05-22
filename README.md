@@ -1,22 +1,52 @@
-# Redactd Design Loop Marketplace
+# Redactd Design Loop
 
-Local Codex marketplace for the official Redactd Design Loop plugin.
+The official Redactd Design Loop plugin for Codex.
 
-## Plugin
+Run Redactd Design Loop on Redactd JSON artifacts from Codex, generate critique and iteration outputs, and import the results back into Redactd.
 
-- `redactd-design-loop`
-- Marketplace entry: `.agents/plugins/marketplace.json`
-- Plugin root: `plugins/redactd-design-loop`
+## Install In Codex
 
-## Local Install
+In Codex, open **Plugins**, then add this GitHub marketplace:
 
-```bash
-codex plugin marketplace add .
-codex plugin add redactd-design-loop@redactd-official-local
+```text
+Source: michaeltrilford/redactd-design-loop
+Git ref: main
+Sparse paths:
+.agents/plugins
+plugins/redactd-design-loop
 ```
 
-## Release Notes
+After the marketplace is added, install **Redactd Design Loop** from the plugin list.
 
-- Do not distribute generated `.redactd-runs*` folders.
-- Do not distribute `.DS_Store` files.
-- Keep the marketplace source path as `./plugins/redactd-design-loop`.
+## Usage
+
+Attach or select a Redactd JSON artifact in Codex, then ask:
+
+```text
+Run Design Loop on this Redactd JSON.
+```
+
+You can also specify the review scope and iteration count:
+
+```text
+Run Design Loop with all personas and 4 loops.
+Run Design Loop with users only and 2 loops.
+Run one focused user review loop.
+```
+
+## Outputs
+
+The plugin writes a `design-loop-run/` folder into your selected workspace. It includes:
+
+- critique reports
+- iteration loop JSON files
+- preview images when available
+- selected final output
+
+Drag the `design-loop-run/` folder into [Redactd Design Loop](https://redactd.xyz/design-loop) to review the dashboard, or drag individual `iteration/loop-x/design/*.json` files into the Redactd editor canvas.
+
+## Links
+
+- Redactd Design Loop: https://redactd.xyz/design-loop
+- Redactd: https://redactd.xyz
+
