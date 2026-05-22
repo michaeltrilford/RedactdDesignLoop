@@ -12,6 +12,9 @@
     "test:plugin": "node ./scripts/plugin-smoke.js",
     "validate:plugin": "PYTHONPATH=/private/tmp/codex-yaml-shim python3 /Users/michaeltrilford/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py ."
   },
+  "dependencies": {
+    "playwright": "1.57.0"
+  },
   "engines": {
     "node": ">=18"
   }

@@ -5,6 +5,13 @@ import { ensureDir, listFilesRecursive, readJson, writeJson, writeText } from '.
 import { buildProvider } from './providers/factory.js';
 import { getPersonas } from './personas.js';
 import { loadProject } from './project.js';
+import {
+  baselinePreviewPath,
+  captureDesignPreviews,
+  loopPreviewPath,
+  resolvePreviewUrl,
+  shouldCapturePreviews
+} from './preview-capture.js';
 import { writeCritiqueDashboard } from './reports.js';
 import { writeRunManifest } from './run-manifest.js';
 
@@ -16,8 +23,8 @@ function slugify(value) {
     .slice(0, 48) || 'run';
 }
 
-function makeRunId(promptText) {
-  return slugify(promptText || 'design-loop-run');
+function makeRunId() {
+  return 'design-loop-run';
 }
 
 async function pathExists(filePath) {
@@ -50,7 +57,7 @@ function resolvePersonaScope(input) {
 }
 
 function resolveLoopCount(input) {
-  if (typeof input.explorationDepth === 'number' && [2, 4, 6, 8].includes(input.explorationDepth)) {
+  if (typeof input.explorationDepth === 'number' && [1, 2, 4, 6, 8].includes(input.explorationDepth)) {
     return input.explorationDepth;
   }
 
@@ -58,6 +65,7 @@ function resolveLoopCount(input) {
 }
 
 function resolveExplorationLabel(loopCount) {
+  if (loopCount === 1) return 'single focused iteration';
   if (loopCount === 2) return 'focused refinement';
   if (loopCount === 4) return 'broader exploration';
   if (loopCount === 6) return 'strong variation sweep';
@@ -329,6 +337,63 @@ function firstPersonaSignal(persona) {
   return focus || goal || success || persona?.role || persona?.name || 'their priorities';
 }
 
+function finiteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function scoreOrNull(value) {
+  const number = finiteNumber(value);
+  return number && number > 0 ? Math.max(1, Math.min(10, number)) : null;
+}
+
+function normalizeOutputFileName(value, fallback) {
+  const raw = typeof value === 'string' && value.trim() ? value.trim() : fallback;
+  const baseName = path.basename(raw);
+  return baseName.endsWith('.json') ? baseName : `${baseName}.json`;
+}
+
+function normalizeDesignPagePayload(page, index, fallbackName = `page-${index + 1}.json`) {
+  const fileName = normalizeOutputFileName(page?.fileName, fallbackName);
+  const document =
+    page?.document && typeof page.document === 'object'
+      ? page.document
+      : page && typeof page === 'object' && typeof page.type === 'string'
+        ? page
+        : null;
+
+  if (!document) {
+    throw new Error(`Design page ${index + 1} must include a Redactd JSON document.`);
+  }
+
+  return {
+    ...page,
+    fileName,
+    document
+  };
+}
+
+function estimateReportScores(report) {
+  const frictionCount = Array.isArray(report?.frictionPoints) ? report.frictionPoints.length : 0;
+  const confusionCount = Array.isArray(report?.confusionPoints) ? report.confusionPoints.length : 0;
+  const recommendationCount = Array.isArray(report?.recommendations) ? report.recommendations.length : 0;
+  const frictionScore = Math.min(10, Math.max(1, 2 + frictionCount + Math.floor(confusionCount / 2)));
+  const clarityScore = Math.max(1, Math.min(10, 9 - confusionCount - Math.floor(frictionCount / 3)));
+  const csat = Number(
+    Math.max(
+      1,
+      Math.min(10, 8.4 - frictionCount * 0.6 - confusionCount * 0.5 + Math.min(recommendationCount, 2) * 0.1)
+    ).toFixed(1)
+  );
+
+  return {
+    csat,
+    frictionScore,
+    clarityScore,
+    taskSuccess: clarityScore >= 5
+  };
+}
+
 function enforceDistinctReports(reports, personasById) {
   const seen = new Map();
 
@@ -367,6 +432,12 @@ function normalizeReportList(reports, personasById) {
       report?.id ||
       `persona-${index + 1}`;
     const persona = personasById.get(personaId) || personaInput;
+    const estimatedScores = estimateReportScores(report);
+    const csat = scoreOrNull(report?.csat) ?? estimatedScores.csat;
+    const frictionScore = scoreOrNull(report?.frictionScore) ?? estimatedScores.frictionScore;
+    const clarityScore = scoreOrNull(report?.clarityScore) ?? estimatedScores.clarityScore;
+    const taskSuccess =
+      typeof report?.taskSuccess === 'boolean' ? report.taskSuccess : estimatedScores.taskSuccess;
 
     return {
       ...report,
@@ -379,10 +450,10 @@ function normalizeReportList(reports, personasById) {
       frictionPoints: Array.isArray(report?.frictionPoints) ? report.frictionPoints : [],
       confusionPoints: Array.isArray(report?.confusionPoints) ? report.confusionPoints : [],
       recommendations: Array.isArray(report?.recommendations) ? report.recommendations : [],
-      csat: Number(report?.csat || 0),
-      taskSuccess: Boolean(report?.taskSuccess),
-      frictionScore: Number(report?.frictionScore || 0),
-      clarityScore: Number(report?.clarityScore || 0)
+      csat,
+      taskSuccess,
+      frictionScore,
+      clarityScore
     };
   });
 }
@@ -681,10 +752,8 @@ function summarizeCritiqueFromArtifacts(project, critique, context) {
 }
 
 function summarizeScoresFromArtifacts(critique) {
-  if (critique.scores) return critique.scores;
-
   const reports = Array.isArray(critique.reports) ? critique.reports : [];
-  return {
+  const derived = {
     averageCsat:
       reports.length > 0
         ? Number((reports.reduce((sum, report) => sum + Number(report.csat || 0), 0) / reports.length).toFixed(1))
@@ -693,6 +762,15 @@ function summarizeScoresFromArtifacts(critique) {
       reports.length > 0
         ? Number((reports.filter((report) => report.taskSuccess).length / reports.length).toFixed(2))
         : 0
+  };
+
+  if (!critique.scores || typeof critique.scores !== 'object') return derived;
+
+  const scores = { ...critique.scores };
+  return {
+    ...scores,
+    averageCsat: scoreOrNull(scores.averageCsat) ?? scoreOrNull(scores.overall) ?? derived.averageCsat,
+    successRate: finiteNumber(scores.successRate) ?? derived.successRate
   };
 }
 
@@ -708,8 +786,37 @@ async function writeLoopSessionArtifacts(runRoot, iteration) {
   const iterationDir = path.join(runRoot, 'iteration');
   await ensureDir(iterationDir);
 
-  const loops = Array.isArray(iteration.loops) ? iteration.loops : [];
+  const loops = (Array.isArray(iteration.loops) ? iteration.loops : []).map((loop) => ({
+    ...loop,
+    pages: (Array.isArray(loop.pages) ? loop.pages : []).map((page, index) =>
+      normalizeDesignPagePayload(page, index, `loop-${loop.loopNumber || 'x'}-page-${index + 1}.json`)
+    )
+  }));
   const loopSummaryPaths = [];
+  const previewCaptureItems = [];
+
+  const loopSummaryFrom = (loop) => ({
+    loopNumber: loop.loopNumber,
+    strategy: loop.strategy || null,
+    whyThisExists: loop.whyThisExists || null,
+    summary: loop.summary,
+    changes: Array.isArray(loop.changes) ? loop.changes : [],
+    retained: Array.isArray(loop.retained) ? loop.retained : [],
+    risks: Array.isArray(loop.risks) ? loop.risks : [],
+    scores:
+      loop.scores && typeof loop.scores === 'object'
+        ? {
+            ...loop.scores,
+            frictionScore: scoreOrNull(loop.scores.frictionScore) ?? scoreOrNull(loop.scores.friction),
+            clarityScore: scoreOrNull(loop.scores.clarityScore) ?? scoreOrNull(loop.scores.clarity),
+            csat: scoreOrNull(loop.scores.csat) ?? scoreOrNull(loop.scores.overall)
+          }
+        : null,
+    pages: (loop.pages || []).map((page) => ({
+      fileName: page.fileName,
+      previewPath: page.previewPath || loopPreviewPath(loop.loopNumber, page.fileName)
+    }))
+  });
 
   for (const loop of loops) {
     const loopDir = path.join(iterationDir, `loop-${loop.loopNumber}`);
@@ -717,15 +824,7 @@ async function writeLoopSessionArtifacts(runRoot, iteration) {
     await ensureDir(loopDir);
     await ensureDir(designDir);
 
-    const summary = {
-      loopNumber: loop.loopNumber,
-      strategy: loop.strategy || null,
-      whyThisExists: loop.whyThisExists || null,
-      summary: loop.summary,
-      changes: Array.isArray(loop.changes) ? loop.changes : [],
-      retained: Array.isArray(loop.retained) ? loop.retained : [],
-      risks: Array.isArray(loop.risks) ? loop.risks : []
-    };
+    const summary = loopSummaryFrom(loop);
 
     const summaryPath = path.join(loopDir, 'summary.json');
     await writeJson(summaryPath, summary);
@@ -733,24 +832,22 @@ async function writeLoopSessionArtifacts(runRoot, iteration) {
 
     for (const page of loop.pages || []) {
       await writeJson(path.join(designDir, page.fileName), page.document);
+      const previewPath = page.previewPath || loopPreviewPath(loop.loopNumber, page.fileName);
+      page.previewPath = previewPath;
+      previewCaptureItems.push({
+        previewPath,
+        document: page.document
+      });
     }
   }
 
   const sessionPath = path.join(iterationDir, 'session.json');
   await writeJson(sessionPath, {
     recommendedLoopNumber: iteration.recommendedLoopNumber || null,
-    loops: loops.map((loop) => ({
-      loopNumber: loop.loopNumber,
-      strategy: loop.strategy || null,
-      whyThisExists: loop.whyThisExists || null,
-      summary: loop.summary,
-      changes: Array.isArray(loop.changes) ? loop.changes : [],
-      retained: Array.isArray(loop.retained) ? loop.retained : [],
-      risks: Array.isArray(loop.risks) ? loop.risks : []
-    }))
+    loops: loops.map(loopSummaryFrom)
   });
 
-  return { sessionPath, loopSummaryPaths };
+  return { sessionPath, loopSummaryPaths, previewCaptureItems };
 }
 
 async function writeSourceCritique(runRoot, summary, scores) {
@@ -783,7 +880,7 @@ export async function runDesignLoop(input) {
   const personaPath = resolvePersonaScope(input);
   const explorationDepth = resolveLoopCount(input);
   const variationMode = resolveVariationMode(input);
-  const runId = makeRunId(promptText || 'design-loop-run');
+  const runId = makeRunId();
   const runRoot = await resolveUniqueRunRoot(resolveOutputRoot(input), runId);
   const { promptPath, projectPath } = await materializeRunInput(runRoot, input);
   const project = await loadProject(projectPath);
@@ -916,6 +1013,14 @@ export async function writeLoopArtifacts(input) {
 
   const savedReports = await loadSavedCritiqueReports(reportPaths);
   const summary = summarizeCritiqueFromArtifacts(project, { ...critique, reports: savedReports }, context);
+  const baselinePreviewItems = project.pages.map((page) => ({
+    previewPath: baselinePreviewPath(page.fileName),
+    document: page.rootNode
+  }));
+  summary.pages = summary.pages.map((page) => ({
+    ...page,
+    previewPath: baselinePreviewPath(page.fileName)
+  }));
   validateCritiqueSummary(summary);
 
   const summaryPath = path.join(critiqueDir, 'summary.json');
@@ -931,6 +1036,13 @@ export async function writeLoopArtifacts(input) {
   });
 
   const iterationResult = await writeLoopSessionArtifacts(runRoot, input.iteration || { loops: [] });
+  if (shouldCapturePreviews(input)) {
+    await captureDesignPreviews({
+      runRoot,
+      previewUrl: resolvePreviewUrl(input),
+      pages: [...baselinePreviewItems, ...iterationResult.previewCaptureItems]
+    });
+  }
   await writeSourceCritique(runRoot, summary, scores);
   await writeRunStatus(runRoot, {
     state: 'running',
@@ -979,7 +1091,9 @@ export async function saveDesignLoopOutput(input) {
   const finalDir = path.join(runRoot, 'final');
   await ensureDir(finalDir);
 
-  const pages = Array.isArray(input.finalJson) ? input.finalJson : [];
+  const pages = (Array.isArray(input.finalJson) ? input.finalJson : []).map((page, index) =>
+    normalizeDesignPagePayload(page, index, 'final')
+  );
   if (pages.length === 0) {
     throw new Error('save_design_loop_output requires finalJson.');
   }

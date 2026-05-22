@@ -22,8 +22,8 @@ function buildRunInputSchema() {
     },
     explorationDepth: {
       type: 'number',
-      enum: [2, 4, 6, 8],
-      description: '2 = focused refinement, 4 = broader exploration and default, 6 = strong variation sweep, 8 = crazy eights mode.'
+      enum: [1, 2, 4, 6, 8],
+      description: '1 = single focused iteration, 2 = focused refinement, 4 = broader exploration and default, 6 = strong variation sweep, 8 = crazy eights mode.'
     },
     variationMode: {
       type: 'string',
@@ -99,6 +99,14 @@ export const TOOL_DEFINITIONS = [
       type: 'object',
       properties: {
         runRoot: { type: 'string' },
+        capturePreviews: {
+          type: 'boolean',
+          description: 'Capture PNG previews for baseline and iteration designs when Playwright is available.'
+        },
+        previewUrl: {
+          type: 'string',
+          description: 'Optional deployed Redactd preview renderer URL. Defaults to https://redactd.xyz/design-loop-preview.'
+        },
         critique: {
           type: 'object',
           properties: {
@@ -134,6 +142,7 @@ export const TOOL_DEFINITIONS = [
                   changes: { type: 'array', items: { type: 'string' } },
                   retained: { type: 'array', items: { type: 'string' } },
                   risks: { type: 'array', items: { type: 'string' } },
+                  scores: { type: 'object' },
                   pages: {
                     type: 'array',
                     items: {
