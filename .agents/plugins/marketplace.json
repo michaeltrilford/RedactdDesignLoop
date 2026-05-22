@@ -1,7 +1,7 @@
 {
-  "name": "redactd-official-local",
+  "name": "redactd-official",
   "interface": {
-    "displayName": "Redactd Official Local"
+    "displayName": "Redactd Official"
   },
   "plugins": [
     {
