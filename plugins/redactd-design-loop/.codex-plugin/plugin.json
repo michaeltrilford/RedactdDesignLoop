@@ -37,7 +37,6 @@
     "composerIcon": "./assets/logo.png",
     "logo": "./assets/logo.png",
     "screenshots": [
-      "./assets/banner.png",
       "./assets/product.png"
     ]
   }
