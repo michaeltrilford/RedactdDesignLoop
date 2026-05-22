@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "package:plugin": "mkdir -p dist && cd plugins/redactd-design-loop && zip -r ../../dist/redactd-design-loop-0.1.0.zip . -x 'node_modules/*' '.git/*' '.DS_Store' '*/.DS_Store' '.redactd-runs-live/*' 'Redactd-Design-Loop/*'"
+    "package:plugin": "mkdir -p dist && rm -f dist/redactd-design-loop-0.1.0.zip && cd plugins/redactd-design-loop && zip -r ../../dist/redactd-design-loop-0.1.0.zip . -x 'node_modules/*' '.git/*' '.DS_Store' '*/.DS_Store' '.redactd-runs-live/*' 'Redactd-Design-Loop/*'"
   }
 }

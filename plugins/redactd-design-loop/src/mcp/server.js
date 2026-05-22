@@ -52,6 +52,8 @@ export function startServer() {
       }
 
       try {
+        const isNotification = !Object.prototype.hasOwnProperty.call(request, 'id');
+
         if (request.method === 'initialize') {
           writeMessage({
             jsonrpc: '2.0',
@@ -67,6 +69,10 @@ export function startServer() {
               }
             }
           });
+          continue;
+        }
+
+        if (isNotification) {
           continue;
         }
 
@@ -93,13 +99,13 @@ export function startServer() {
 
         writeMessage({
           jsonrpc: '2.0',
-          id: request.id,
+          id: request.id ?? null,
           error: { code: -32601, message: `Method not found: ${request.method}` }
         });
       } catch (error) {
         writeMessage({
           jsonrpc: '2.0',
-          id: request.id,
+          id: request.id ?? null,
           error: {
             code: -32000,
             message: error.message

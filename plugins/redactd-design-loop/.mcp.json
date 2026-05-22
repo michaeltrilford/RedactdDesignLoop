@@ -1,5 +1,5 @@
 {
-  "mcp_servers": {
+  "mcpServers": {
     "redactd-design-loop": {
       "command": "node",
       "cwd": ".",

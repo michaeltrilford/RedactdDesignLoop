@@ -41,12 +41,8 @@ function buildRunInputSchema() {
 
   return {
     type: 'object',
-    anyOf: [
-      { required: ['artifactPath'] },
-      { required: ['projectPath'] },
-      { required: ['initialPages'] }
-    ],
     properties,
+    description: 'Provide exactly one source: artifactPath, projectPath, or initialPages.',
     required: []
   };
 }
