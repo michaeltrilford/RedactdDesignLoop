@@ -205,9 +205,7 @@ function autoSelectProvider(input) {
     return 'mock';
   }
   if (process.env.OPENAI_API_KEY) return 'openai';
-  if (process.env.GROQ_API_KEY) return 'groq';
-  if (process.env.XAI_API_KEY) return 'grok';
-  throw new Error('Loop requires a configured provider. Set OPENAI_API_KEY, GROQ_API_KEY, or XAI_API_KEY.');
+  throw new Error('Loop requires a configured provider. Set OPENAI_API_KEY.');
 }
 
 function countValues(items) {
