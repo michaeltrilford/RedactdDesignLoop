@@ -11,7 +11,7 @@ Redactd Design Loop is the official Codex plugin for running critique and iterat
 Until Codex has a simpler public plugin directory, install Redactd Design Loop by pointing Codex at the Redactd Design Loop GitHub repo.
 
 Plugin source:
-https://github.com/michaeltrilford/redactd-design-loop
+https://github.com/michaeltrilford/RedactdDesignLoop
 
 ![Codex Add Marketplace dialog](https://redactd.xyz/images/install-plugin.png)
 
@@ -29,7 +29,7 @@ https://github.com/michaeltrilford/redactd-design-loop
 ## Add Marketplace Values
 
 ```text
-Source: michaeltrilford/redactd-design-loop
+Source: michaeltrilford/RedactdDesignLoop
 
 Git ref:
 main
