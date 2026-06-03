@@ -29,7 +29,7 @@ https://github.com/michaeltrilford/RedactdDesignLoop
 ## Add Marketplace Values
 
 ```text
-Source: https://github.com/michaeltrilford/RedactdDesignLoop.git
+Source: michaeltrilford/RedactdDesignLoop
 
 Git ref:
 main
