@@ -1,6 +1,6 @@
 {
   "name": "redactd-design-loop",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260723011833",
   "description": "Official Codex plugin for running Redactd Design Loop on Redactd JSON artifacts.",
   "author": {
     "name": "Redactd",

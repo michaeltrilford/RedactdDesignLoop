@@ -1,6 +1,6 @@
 {
   "name": "redactd-design-loop",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260723011833",
   "private": true,
   "description": "Official Codex plugin for running Redactd Design Loop locally.",
   "license": "LicenseRef-Redactd-Proprietary",
@@ -10,7 +10,8 @@
     "start": "node ./src/index.js",
     "test:smoke": "node ./src/index.js --smoke",
     "test:plugin": "node ./scripts/plugin-smoke.js",
-    "validate:plugin": "PYTHONPATH=/private/tmp/codex-yaml-shim python3 /Users/michaeltrilford/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py ."
+    "validate:plugin": "PYTHONPATH=./scripts/python-shims python3 /Users/michaeltrilford/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .",
+    "refresh:plugin": "node ./scripts/refresh-plugin.mjs"
   },
   "dependencies": {
     "playwright": "1.57.0"
